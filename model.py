@@ -5,9 +5,11 @@ import pandas as pd
 
 df = pd.read_csv('spam_assassin.csv')
 df['label'] = df['target']
+print(df.shape)
 import re 
 # pre-processing text 
 def preprocess_text(text):
+   
     text = text.lower()
     text = re.sub(r'<[^>]*>','',text)
     text = re.sub(r'http\S+|www\S+', '', text)
@@ -39,3 +41,34 @@ print(classification_report(y_val,y_val_pred, target_names=["Spam","Ham"], digit
 y_test_pred = model.predict(X_test)
 print(classification_report(y_test, y_test_pred, target_names=["Spam","Ham"], digits = 3 ))
 
+
+
+
+# bigger data set(~ 75,000)
+
+df2 = pd.read_csv('processed_data.csv')
+cols = ['label', 'message']
+df2 = df2[cols]
+print(df2.shape)
+df2 = df2.dropna(axis =1, how = 'all')
+# pre processing 
+def preprocess_text2(text):
+    text = str(text)  
+    text = re.sub(r'<[^>]*>','',text)
+    text = re.sub(r'http\S+|www\S+', '', text)
+    text = re.sub(r'\S+@\S+', '', text)
+    text = re.sub(r'[^a-zA-Z\s]',  '', text)
+    text = ' '.join(text.split())
+    return text 
+df2['preprocessed_text'] = df2['message'].apply(preprocess_text2)
+
+X_train2, X_temp2, y_train2, y_temp2 = train_test_split(df2['preprocessed_text'], df2['label'], test_size=0.2, random_state=42, stratify = df2['label']) 
+
+X_val2, X_test2, y_val2, y_test2 = train_test_split(X_temp2 , y_temp2, test_size = 0.5, random_state = 42, stratify = y_temp2)
+
+model.fit(X_train2,y_train2)
+y_val_pred2 = model.predict(X_val2) 
+print(classification_report(y_val2,y_val_pred2, target_names=["Spam","Ham"], digits = 3 ))
+
+y_test_pred2 = model.predict(X_test2)
+print(classification_report(y_test2, y_test_pred2, target_names=["Spam","Ham"], digits = 3 ))
